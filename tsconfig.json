@@ -11,6 +11,6 @@
     "strict": true,
     "target": "es2022"
   },
-  "exclude": ["coverage/", "lib/", "node_modules/", "test"],
+  "exclude": ["coverage/", "lib/", "node_modules/", "test/"],
   "include": ["./dev/**/*.ts", "dev/index.d.ts"]
 }
