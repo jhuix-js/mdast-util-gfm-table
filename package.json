@@ -18,7 +18,9 @@
     "tabular",
     "gfm"
   ],
-  "repository": "jhuix-js/mdast-util-gfm-table",
+  "repository": {
+    "url": "git+https://github.com/jhuix-js/mdast-util-gfm-table.git"
+  },
   "bugs": "https://github.com/jhuix-js/mdast-util-gfm-table/issues",
   "author": "Jhuix [Hui Jin] <jhuix0117@gmail.com>",
   "contributors": [
