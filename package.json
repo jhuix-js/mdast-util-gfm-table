@@ -33,8 +33,10 @@
     "default": "./index.js"
   },
   "files": [
-    "dev/*.js",
-    "dev/*.d.ts",
+    "dev/index.js",
+    "dev/index.d.ts",
+    "dev/lib/*.js",
+    "dev/lib/*.d.ts",
     "lib/",
     "index.d.ts",
     "index.js"
