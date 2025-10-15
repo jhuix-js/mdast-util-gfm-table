@@ -8,8 +8,8 @@ import stringWidth from 'string-width'
 import {fromMarkdown as mdastFromMarkdown} from 'mdast-util-from-markdown'
 import {toMarkdown} from 'mdast-util-to-markdown'
 import {removePosition} from 'unist-util-remove-position'
-import {gfmTableFromMarkdown, gfmTableToMarkdown} from '../index.js'
-import {gfmTable} from '../../micromark-extension-gfm-table/index.js'
+import {gfmTableFromMarkdown, gfmTableToMarkdown} from '@jhuix/mdast-util-gfm-table'
+import {gfmTable} from '@jhuix/micromark-extension-gfm-table'
 
 function fromMarkdown(value, encoding, options) {
   const tree = mdastFromMarkdown(value, encoding, options)
@@ -19,7 +19,7 @@ function fromMarkdown(value, encoding, options) {
 
 test('core', async function (t) {
   await t.test('should expose the public api', async function () {
-    assert.deepEqual(Object.keys(await import('../index.js')).sort(), [
+    assert.deepEqual(Object.keys(await import('@jhuix/mdast-util-gfm-table')).sort(), [
       'gfmTableFromMarkdown',
       'gfmTableToMarkdown'
     ])
@@ -27,7 +27,7 @@ test('core', async function (t) {
 })
 
 test('gfmTableFromMarkdown()', async function (t) {
-  await t.test('should support tables (0)', async function () {
+  await t.test('tables demo (0)', async function () {
     const tree = fromMarkdown(
       '| a | b | c | d |\n| - | :- | -: | :-: |\n| e | f |\n| g | h | i | j | k |',
       {
@@ -147,7 +147,7 @@ test('gfmTableFromMarkdown()', async function (t) {
     })
   })
 
-  await t.test('should support tables (1)', async function () {
+  await t.test('tables demo (1)', async function () {
     const tree = fromMarkdown('| foo | bar |\n| :-- | :-: |\n| baz | qux |', {
       extensions: [gfmTable()],
       mdastExtensions: [gfmTableFromMarkdown()]
