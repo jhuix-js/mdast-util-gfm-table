@@ -8,7 +8,10 @@ import stringWidth from 'string-width'
 import {fromMarkdown as mdastFromMarkdown} from 'mdast-util-from-markdown'
 import {toMarkdown} from 'mdast-util-to-markdown'
 import {removePosition} from 'unist-util-remove-position'
-import {gfmTableFromMarkdown, gfmTableToMarkdown} from '@jhuix/mdast-util-gfm-table'
+import {
+  gfmTableFromMarkdown,
+  gfmTableToMarkdown
+} from '@jhuix/mdast-util-gfm-table'
 import {gfmTable} from '@jhuix/micromark-extension-gfm-table'
 
 function fromMarkdown(value, encoding, options) {
@@ -19,10 +22,10 @@ function fromMarkdown(value, encoding, options) {
 
 test('core', async function (t) {
   await t.test('should expose the public api', async function () {
-    assert.deepEqual(Object.keys(await import('@jhuix/mdast-util-gfm-table')).sort(), [
-      'gfmTableFromMarkdown',
-      'gfmTableToMarkdown'
-    ])
+    assert.deepEqual(
+      Object.keys(await import('@jhuix/mdast-util-gfm-table')).sort(),
+      ['gfmTableFromMarkdown', 'gfmTableToMarkdown']
+    )
   })
 })
 
