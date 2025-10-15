@@ -337,8 +337,10 @@ export function gfmTableFromMarkdown(options?: Options): FromMarkdownExtension {
  * @returns {ToMarkdownExtension}
  *   Extension for `mdast-util-to-markdown` to enable GFM tables.
  */
-export function gfmTableToMarkdown(options: Options): ToMarkdownExtension {
-  const settings = options || {}
+export function gfmTableToMarkdown(
+  options?: Options | null | undefined
+): ToMarkdownExtension {
+  const settings = options ?? {}
   const padding = settings.tableCellPadding
   const alignDelimiters = settings.tablePipeAlign
   const stringLength = settings.stringLength
