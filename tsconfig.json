@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "composite": true,
+    "customConditions": ["development"],
+    "declaration": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["es2022"],
+    "module": "node16",
+    "strict": true,
+    "target": "es2022"
+  },
+  "exclude": ["coverage/", "lib/", "node_modules/", "test"],
+  "include": ["./dev/**/*.ts", "dev/index.d.ts"]
+}

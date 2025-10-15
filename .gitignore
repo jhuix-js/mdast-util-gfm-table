@@ -1,0 +1,11 @@
+coverage/
+node_modules/
+/lib/
+.DS_Store
+*.d.ts
+*.log
+*.map
+*.tsbuildinfo
+*.js
+yarn.lock
+!/test/*.js
