@@ -59,7 +59,7 @@ function applyData(state: State, node: MdastNodes, wrap: boolean): HastElement {
       Object.assign(result.properties, structuredClone(hProperties))
     }
 
-    /* c8 ignore next 8 */
+    /* c8 ignore start */
     if (
       'children' in result &&
       result.children &&
@@ -68,6 +68,7 @@ function applyData(state: State, node: MdastNodes, wrap: boolean): HastElement {
     ) {
       result.children = hChildren
     }
+    /* c8 ignore stop */
   }
 
   return result

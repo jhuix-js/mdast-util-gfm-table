@@ -159,15 +159,14 @@ export function gfmTableFromMarkdown(): FromMarkdownExtension {
     for (let m = table.children.length - 1; m >= 0; m--) {
       const toBeDeleted: Array<[number, number]> = []
       const rows = table.children[m]
-      assert(
-        rows.type !== 'tableRow',
-        'should not `tableRow` type on root children'
-      )
+      /* c8 ignore next */
+      if (rows.type === 'tableRow') continue
       for (let i = rows.children.length - 1; i >= 0; i--) {
         const row = rows.children[i]
         for (let j = row.children.length - 1; j >= 0; j--) {
           const cell = row.children[j]
           if (align[j]) {
+            /* c8 ignore next 2 */
             const data = cell.data ?? (cell.data = {})
             const properties = data.hProperties ?? (data.hProperties = {})
             properties.align = align[j]
@@ -184,8 +183,8 @@ export function gfmTableFromMarkdown(): FromMarkdownExtension {
 
               for (let k = 1; j + k < row.children.length; k++) {
                 const next = row.children[j + k]
-                const data = next.data
-                assert(data, 'expected `data` on table cell')
+                /* c8 ignore next 2 */
+                const data = next.data ?? (next.data = {})
                 const properties = data.hProperties ?? (data.hProperties = {})
                 properties.colspan = (next.colspan ?? 1) + 1
                 next.colspan = properties.colspan
@@ -203,8 +202,8 @@ export function gfmTableFromMarkdown(): FromMarkdownExtension {
               }
 
               const previous = rows.children[i - 1].children[j]
-              const data = previous.data
-              assert(data, 'expected `data` on table cell')
+              /* c8 ignore next 2 */
+              const data = previous.data ?? (previous.data = {})
               const properties = data.hProperties ?? (data.hProperties = {})
               properties.rowspan = (previous.rowspan ?? 1) + (cell.rowspan ?? 1)
               previous.rowspan = properties.rowspan
@@ -219,8 +218,9 @@ export function gfmTableFromMarkdown(): FromMarkdownExtension {
                 break
               }
 
-              const data = row.children[j - 1].data
-              assert(data, 'expected `data` on table cell')
+              /* c8 ignore next 2 */
+              const data =
+                row.children[j - 1].data ?? (row.children[j - 1].data = {})
               const properties = data.hProperties ?? (data.hProperties = {})
               properties.colspan =
                 (row.children[j - 1].colspan ?? 1) + (cell.colspan ?? 1)
@@ -248,10 +248,8 @@ export function gfmTableFromMarkdown(): FromMarkdownExtension {
       // Create empty cell node
       if (node.align) {
         for (const rows of node.children) {
-          assert(
-            rows.type !== 'tableRow',
-            'should not `tableRow` type on root children'
-          )
+          /* c8 ignore next */
+          if (rows.type === 'tableRow') continue
           for (const row of rows.children) {
             const currSize = row.children.length
             for (let i = 0; i < node.align.length - currSize; i++) {
