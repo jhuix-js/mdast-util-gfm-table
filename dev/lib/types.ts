@@ -1,7 +1,11 @@
-import type {ElementContent, Properties} from 'hast'
+import type {Element, ElementContent, Properties} from 'hast'
 import type {Data, PhrasingContent, Parent} from 'mdast'
 import type {Node, Parent as UnistParent} from 'unist'
 import type {Options as MarkdownTableOptions} from 'markdown-table'
+
+export type HastElementContent = ElementContent
+export type HastElement = Element
+export type HastProperties = Properties
 
 /**
  * Configuration.
@@ -282,4 +286,8 @@ declare module 'mdast-util-to-markdown' {
 
     tableBody: 'tableBody'
   }
+}
+
+export function transData(v: Data): Data {
+  return v
 }

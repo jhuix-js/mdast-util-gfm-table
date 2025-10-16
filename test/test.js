@@ -10,9 +10,12 @@ import {toMarkdown} from 'mdast-util-to-markdown'
 import {removePosition} from 'unist-util-remove-position'
 import {
   gfmTableFromMarkdown,
+  gfmTableHastHandlers,
   gfmTableToMarkdown
 } from '@jhuix/mdast-util-gfm-table'
 import {gfmTable} from '@jhuix/micromark-extension-gfm-table'
+import {toHast} from 'mdast-util-to-hast'
+import {toHtml} from 'hast-util-to-html'
 
 function fromMarkdown(value, encoding, options) {
   const tree = mdastFromMarkdown(value, encoding, options)
@@ -24,13 +27,123 @@ test('core', async function (t) {
   await t.test('should expose the public api', async function () {
     assert.deepEqual(
       Object.keys(await import('@jhuix/mdast-util-gfm-table')).sort(),
-      ['gfmTableFromMarkdown', 'gfmTableToMarkdown']
+      ['gfmTableFromMarkdown', 'gfmTableHastHandlers', 'gfmTableToMarkdown']
+    )
+  })
+})
+
+test('gfmTableHastHandlers()', async function (t) {
+  await t.test('table hast handlers', async function () {
+    const mdast = fromMarkdown(
+      '| abc | def |\n| :--- | --- |\n| bar | baz |\nbar\n\nbar\n',
+      {
+        extensions: [gfmTable()],
+        mdastExtensions: [gfmTableFromMarkdown()]
+      }
+    )
+
+    const hast = toHast(mdast, {
+      allowDangerousHtml: true,
+      handlers: gfmTableHastHandlers()
+    })
+
+    const actualHtml = toHtml(hast, {
+      allowDangerousHtml: true,
+      characterReferences: {useNamedReferences: true},
+      closeSelfClosing: true
+    })
+
+    assert.deepEqual(
+      actualHtml,
+      '<table>\n<thead>\n<tr>\n<th align="left">abc</th>\n<th>def</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td align="left">bar</td>\n<td>baz</td>\n</tr>\n<tr>\n<td align="left">bar</td>\n<td></td>\n</tr>\n</tbody>\n</table>\n<p>bar</p>'
     )
   })
 })
 
 test('gfmTableFromMarkdown()', async function (t) {
   await t.test('tables demo (0)', async function () {
+    const tree = fromMarkdown(
+      '| abc | def |\n| --- | --- |\n| bar | baz |\nbar\n\nbar\n',
+      {
+        extensions: [gfmTable()],
+        mdastExtensions: [gfmTableFromMarkdown()]
+      }
+    )
+
+    removePosition(tree, {force: true})
+
+    assert.deepEqual(tree, {
+      type: 'root',
+      children: [
+        {
+          type: 'table',
+          align: [null, null],
+          children: [
+            {
+              type: 'tableHead',
+              children: [
+                {
+                  type: 'tableRow',
+                  children: [
+                    {
+                      type: 'tableCell',
+                      children: [{type: 'text', value: 'abc'}],
+                      data: {hName: 'th'}
+                    },
+                    {
+                      type: 'tableCell',
+                      children: [{type: 'text', value: 'def'}],
+                      data: {hName: 'th'}
+                    }
+                  ],
+                  data: {hName: 'tr'}
+                }
+              ],
+              data: {hName: 'thead'}
+            },
+            {
+              type: 'tableBody',
+              children: [
+                {
+                  type: 'tableRow',
+                  children: [
+                    {
+                      type: 'tableCell',
+                      children: [{type: 'text', value: 'bar'}],
+                      data: {hName: 'td'}
+                    },
+                    {
+                      type: 'tableCell',
+                      children: [{type: 'text', value: 'baz'}],
+                      data: {hName: 'td'}
+                    }
+                  ],
+                  data: {hName: 'tr'}
+                },
+                {
+                  type: 'tableRow',
+                  children: [
+                    {
+                      type: 'tableCell',
+                      children: [{type: 'text', value: 'bar'}],
+                      data: {hName: 'td'}
+                    },
+                    {type: 'tableCell', children: [], data: {hName: 'td'}}
+                  ],
+                  data: {hName: 'tr'}
+                }
+              ],
+              data: {hName: 'tbody'}
+            }
+          ],
+          data: {hName: 'table'}
+        },
+        {type: 'paragraph', children: [{type: 'text', value: 'bar'}]}
+      ]
+    })
+  })
+
+  await t.test('tables demo (1)', async function () {
     const tree = fromMarkdown(
       '| a | b | c | d |\n| - | :- | -: | :-: |\n| e | f |\n| g | h | i | j | k |',
       {
@@ -99,12 +212,12 @@ test('gfmTableFromMarkdown()', async function (t) {
                     {
                       type: 'tableCell',
                       children: [],
-                      data: {hProperties: {align: 'right'}}
+                      data: {hName: 'td', hProperties: {align: 'right'}}
                     },
                     {
                       type: 'tableCell',
                       children: [],
-                      data: {hProperties: {align: 'center'}}
+                      data: {hName: 'td', hProperties: {align: 'center'}}
                     }
                   ],
                   data: {hName: 'tr'}
@@ -150,7 +263,7 @@ test('gfmTableFromMarkdown()', async function (t) {
     })
   })
 
-  await t.test('tables demo (1)', async function () {
+  await t.test('tables demo (2)', async function () {
     const tree = fromMarkdown('| foo | bar |\n| :-- | :-: |\n| baz | qux |', {
       extensions: [gfmTable()],
       mdastExtensions: [gfmTableFromMarkdown()]
@@ -543,7 +656,7 @@ test('gfmTableFromMarkdown()', async function (t) {
                     {
                       type: 'tableCell',
                       children: [],
-                      data: {hProperties: {align: 'left'}}
+                      data: {hName: 'td', hProperties: {align: 'left'}}
                     }
                   ],
                   data: {hName: 'tr'}
@@ -564,7 +677,7 @@ test('gfmTableFromMarkdown()', async function (t) {
                     {
                       type: 'tableCell',
                       children: [],
-                      data: {hProperties: {align: 'left'}}
+                      data: {hName: 'td', hProperties: {align: 'left'}}
                     }
                   ],
                   data: {hName: 'tr'}
@@ -585,7 +698,7 @@ test('gfmTableFromMarkdown()', async function (t) {
                     {
                       type: 'tableCell',
                       children: [],
-                      data: {hProperties: {align: 'left'}}
+                      data: {hName: 'td', hProperties: {align: 'left'}}
                     }
                   ],
                   data: {hName: 'tr'}

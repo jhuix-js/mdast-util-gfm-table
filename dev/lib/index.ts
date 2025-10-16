@@ -24,12 +24,10 @@ import {
 /**
  * Create an extension for `mdast-util-from-markdown` to enable GFM tables in
  * markdown.
- * @param {Options | null | undefined} [options]
- *   Configuration.
  * @returns {FromMarkdownExtension}
  *   Extension for `mdast-util-from-markdown` to enable GFM tables.
  */
-export function gfmTableFromMarkdown(options?: Options): FromMarkdownExtension {
+export function gfmTableFromMarkdown(): FromMarkdownExtension {
   return {
     enter: {
       table: enterTable,
@@ -272,7 +270,8 @@ export function gfmTableFromMarkdown(options?: Options): FromMarkdownExtension {
   function makeCell(): TableCell {
     return {
       type: 'tableCell',
-      children: []
+      children: [],
+      data: {hName: 'td'}
     }
   }
 
