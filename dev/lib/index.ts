@@ -1,6 +1,5 @@
 import {ok as assert} from 'devlop'
 import {visit} from 'unist-util-visit'
-import {markdownTable} from 'markdown-table'
 import {
   defaultHandlers,
   type Options as ToMarkdownExtension,
@@ -13,6 +12,7 @@ import type {
   Extension as FromMarkdownExtension,
   Token
 } from 'mdast-util-from-markdown'
+import {markdownTable} from './markdown.js'
 import {
   type Options,
   type Table,
@@ -56,14 +56,14 @@ export function gfmTableFromMarkdown(): FromMarkdownExtension {
   }
 
   function enterTable(this: CompileContext, token: Token) {
-    const align = token._align
-    assert(align, 'expected `_align` on table')
+    assert(token._align, 'expected `_align` on table')
+    const align = token._align.map(function (d) {
+      return d === 'none' ? null : d
+    })
     this.enter(
       {
         type: 'table',
-        align: align.map(function (d) {
-          return d === 'none' ? null : d
-        }),
+        align,
         children: [],
         data: {
           hName: 'table'
@@ -72,6 +72,7 @@ export function gfmTableFromMarkdown(): FromMarkdownExtension {
       token
     )
     this.data.inTable = true
+    this.data.tableCols = align.length
   }
 
   function exitTable(this: CompileContext, token: Token) {
@@ -92,7 +93,15 @@ export function gfmTableFromMarkdown(): FromMarkdownExtension {
   }
 
   function enterHead(this: CompileContext, token: Token) {
-    this.enter({type: 'tableHead', children: [], data: {hName: 'thead'}}, token)
+    this.enter(
+      {
+        type: 'tableHead',
+        cols: this.data.tableCols,
+        children: [],
+        data: {hName: 'thead'}
+      },
+      token
+    )
     this.data.inTableCell = true
   }
 
@@ -101,7 +110,15 @@ export function gfmTableFromMarkdown(): FromMarkdownExtension {
   }
 
   function enterBody(this: CompileContext, token: Token) {
-    this.enter({type: 'tableBody', children: [], data: {hName: 'tbody'}}, token)
+    this.enter(
+      {
+        type: 'tableBody',
+        cols: this.data.tableCols,
+        children: [],
+        data: {hName: 'tbody'}
+      },
+      token
+    )
     this.data.inTableCell = true
   }
 
@@ -376,7 +393,8 @@ export function gfmTableToMarkdown(
     state: State,
     info: Info
   ): string {
-    return serializeData(handleTableAsData(node, state, info), node.align)
+    const matrix = handleTableAsData(node, state, info)
+    return serializeData(matrix.data, node.align, matrix.headIndex)
   }
 
   /**
@@ -421,37 +439,46 @@ export function gfmTableToMarkdown(
   /**
    * @param {Array<Array<string>>} matrix
    * @param {Array<string | null | undefined> | null | undefined} [align]
+   * @param {number | undefined} [headIndex]
    */
   function serializeData(
     matrix: Array<Array<string>>,
-    align?: Array<AlignType> | null | undefined
+    align?: Array<AlignType> | null | undefined,
+    headIndex?: number | undefined
   ) {
     return markdownTable(matrix, {
       align,
       alignDelimiters,
       padding,
-      stringLength
+      stringLength,
+      headIndex
     })
+  }
+
+  interface TableMatrix {
+    headIndex: number
+    data: Array<Array<string>>
   }
 
   /**
    * @param {Table} node
    * @param {State} state
    * @param {Info} info
+   * @returns {TableMatrix}
    */
   function handleTableAsData(
     node: Table,
     state: State,
     info: Info
-  ): Array<Array<string>> {
+  ): TableMatrix {
     const secs = node.children
     let index = -1
-    const result: Array<Array<string>> = []
+    const result: TableMatrix = {headIndex: -1, data: []}
     const subexit = state.enter('table')
     for (const sec of secs) {
       if (sec.type === 'tableRow') {
         ++index
-        result[index] = handleTableRowAsData(sec, state, info)
+        result.data[index] = handleTableRowAsData(sec, state, info)
         continue
       }
 
@@ -459,7 +486,11 @@ export function gfmTableToMarkdown(
       const children = sec.children
       while (++j < children.length) {
         ++index
-        result[index] = handleTableRowAsData(children[j], state, info)
+        result.data[index] = handleTableRowAsData(children[j], state, info)
+      }
+
+      if (sec.type === 'tableHead') {
+        result.headIndex = index + 1
       }
     }
 

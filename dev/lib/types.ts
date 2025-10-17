@@ -1,5 +1,5 @@
 import type {Element, ElementContent, Properties} from 'hast'
-import type {Data, PhrasingContent, Parent} from 'mdast'
+import type {AlignType, Data, PhrasingContent, Parent} from 'mdast'
 import type {Node, Parent as UnistParent} from 'unist'
 import type {Options as MarkdownTableOptions} from 'markdown-table'
 
@@ -102,6 +102,10 @@ export interface TableHead extends Parent {
    */
   type: 'tableHead'
   /**
+   * Column count from align
+   */
+  cols?: number | undefined
+  /**
    * Children of GFM table head.
    */
   children: Array<TableRow>
@@ -124,6 +128,10 @@ export interface TableBody extends Parent {
    * Node type of mdast GFM table body.
    */
   type: 'tableBody'
+  /**
+   * Column count from align
+   */
+  cols?: number | undefined
   /**
    * Children of GFM table body.
    */
@@ -149,19 +157,13 @@ export const mdastTypes = {
   tableRowspan: 'tableRowspan' as const
 }
 
-export interface TableHeadNode extends UnistParent {
-  type: 'tableHead'
-}
-export interface TableBodyNode extends UnistParent {
-  type: 'tableBody'
-}
-export interface TableColspanRightNode extends Node {
+export interface TableColspanRight extends Node {
   type: 'tableColspanRight'
 }
-export interface TableColspanLeftNode extends Node {
+export interface TableColspanLeft extends Node {
   type: 'tableColspanLeft'
 }
-export interface TableRowspanNode extends Node {
+export interface TableRowspan extends Node {
   type: 'tableRowspan'
 }
 
@@ -212,18 +214,18 @@ declare module 'mdast' {
     hProperties?: Properties | undefined
   }
   interface RootContentMap {
-    tableHead: TableHeadNode
-    tableBody: TableBodyNode
-    tableColspanLeft: TableColspanLeftNode
-    tableColspanRight: TableColspanRightNode
-    tableRowspan: TableRowspanNode
+    tableHead: TableHead
+    tableBody: TableBody
+    tableColspanLeft: TableColspanLeft
+    tableColspanRight: TableColspanRight
+    tableRowspan: TableRowspan
   }
   interface PhrasingContentMap {
-    tableHead: TableHeadNode
-    tableBody: TableBodyNode
-    TableColspanLeft: TableColspanLeftNode
-    TableColspanRight: TableColspanRightNode
-    tableRowspan: TableRowspanNode
+    tableHead: TableHead
+    tableBody: TableBody
+    TableColspanLeft: TableColspanLeft
+    TableColspanRight: TableColspanRight
+    tableRowspan: TableRowspan
   }
   interface TableContentMap {
     tableHead: TableHead
@@ -242,6 +244,10 @@ declare module 'mdast-util-from-markdown' {
      * Whether we’re currently in table cell.
      */
     inTableCell?: boolean | undefined
+    /**
+     * Whether we’re currently column count in table.
+     */
+    tableCols?: number | undefined
   }
 }
 

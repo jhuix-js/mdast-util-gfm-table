@@ -1,4 +1,4 @@
-import type {Nodes as MdastNodes} from 'mdast'
+import type {Nodes as MdastNodes, Parents as MdastParents} from 'mdast'
 import type {Handlers, State} from 'mdast-util-to-hast'
 import {
   type Table,
@@ -23,15 +23,26 @@ import {
  *   mdast node to use data from.
  * @param {boolean} wrap
  *   wrap children.
+ * @param {number} cols
+ *   max colums count.
  * @returns {HastElement}
  *   Nothing.
  */
-function applyData(state: State, node: MdastNodes, wrap: boolean): HastElement {
+function applyData(
+  state: State,
+  node: MdastNodes,
+  wrap: boolean,
+  cols?: number
+): HastElement {
   // Transforming the node resulted in a non-element, which happens for
   // raw, text, and root nodes (unless custom handlers are passed).
   /** @type {Array<HastElementContent>} */
   let children: Array<HastElementContent> = []
   children = state.all(node)
+  if (cols && cols < children.length) {
+    children = children.slice(0, cols)
+  }
+
   if (wrap) {
     children = state.wrap(children, true)
   }
@@ -81,11 +92,22 @@ function applyData(state: State, node: MdastNodes, wrap: boolean): HastElement {
  *   Info passed around.
  * @param {Table} node
  *   mdast node.
+ * @param {MdastParents} [parent]
+ *   Parent of `node`.
  * @returns {HastElementContent}
  *   hast node.
  */
-function table(state: State, node: Table): HastElementContent {
-  return applyData(state, node, true)
+function table(
+  state: State,
+  node: Table,
+  parent?: MdastParents
+): HastElementContent {
+  let cols = 0
+  if (parent && 'cols' in parent && parent.cols) {
+    cols = parent.cols
+  }
+
+  return applyData(state, node, true, cols)
 }
 
 /**

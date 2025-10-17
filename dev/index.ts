@@ -1,3 +1,5 @@
 export type {Options, Table, TableRow, TableCell} from './lib/types.js'
 export {gfmTableFromMarkdown, gfmTableToMarkdown} from './lib/index.js'
 export {gfmTableHastHandlers} from './lib/hast.js'
+export type {Options as MarkOptions} from './lib/markdown.js'
+export {markdownTable} from './lib/markdown.js'

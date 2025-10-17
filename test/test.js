@@ -1,9 +1,15 @@
 /**
  * @typedef {import('mdast').Table} Table
+ * @typedef {import('mdast').Root} Root
+ * @typedef {import('mdast-util-from-markdown').Options} Options
+ * @typedef {import('micromark-util-types').Value} Value
+ * @typedef {import('micromark-util-types').Encoding} Encoding
  */
 
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import chalk from 'chalk'
+import strip from 'strip-ansi'
 import stringWidth from 'string-width'
 import {fromMarkdown as mdastFromMarkdown} from 'mdast-util-from-markdown'
 import {toMarkdown} from 'mdast-util-to-markdown'
@@ -11,23 +17,64 @@ import {removePosition} from 'unist-util-remove-position'
 import {
   gfmTableFromMarkdown,
   gfmTableHastHandlers,
-  gfmTableToMarkdown
+  gfmTableToMarkdown,
+  markdownTable
 } from '@jhuix/mdast-util-gfm-table'
 import {gfmTable} from '@jhuix/micromark-extension-gfm-table'
 import {toHast} from 'mdast-util-to-hast'
 import {toHtml} from 'hast-util-to-html'
 
+/**
+ * Turn markdown into a syntax tree.
+ *
+ * @overload
+ * @param {Value} value
+ * @param {Encoding | null | undefined} [encoding]
+ * @param {Options | null | undefined} [options]
+ * @returns {Root}
+ *
+ * @overload
+ * @param {Value} value
+ * @param {Options | null | undefined} [options]
+ * @returns {Root}
+ *
+ * @param {Value} value
+ *   Markdown to parse.
+ * @param {Encoding | Options | null | undefined} [encoding]
+ *   Character encoding for when `value` is `Buffer`.
+ * @param {Options | null | undefined} [options]
+ *   Configuration.
+ * @returns {Root}
+ *   mdast tree.
+ */
 function fromMarkdown(value, encoding, options) {
   const tree = mdastFromMarkdown(value, encoding, options)
   // Console.log('the tree:', JSON.stringify(tree))
   return tree
 }
 
+/**
+ * Get the length of a string, minus ANSI color characters.
+ *
+ * @param {string} value
+ *   Cell value.
+ * @returns {number}
+ *   Cell size.
+ */
+function stringLength(value) {
+  return strip(value).length
+}
+
 test('core', async function (t) {
   await t.test('should expose the public api', async function () {
     assert.deepEqual(
       Object.keys(await import('@jhuix/mdast-util-gfm-table')).sort(),
-      ['gfmTableFromMarkdown', 'gfmTableHastHandlers', 'gfmTableToMarkdown']
+      [
+        'gfmTableFromMarkdown',
+        'gfmTableHastHandlers',
+        'gfmTableToMarkdown',
+        'markdownTable'
+      ]
     )
   })
 })
@@ -35,7 +82,7 @@ test('core', async function (t) {
 test('gfmTableHastHandlers()', async function (t) {
   await t.test('table hast handlers', async function () {
     const mdast = fromMarkdown(
-      '| abc | def |\n| :--- | --- |\n| bar | baz |\nbar\n\nbar\n',
+      '| abc | def |\n| :--- | --- |\n| bar | baz | x |\nbar\n\nbar\n',
       {
         extensions: [gfmTable()],
         mdastExtensions: [gfmTableFromMarkdown()]
@@ -81,6 +128,7 @@ test('gfmTableFromMarkdown()', async function (t) {
           children: [
             {
               type: 'tableHead',
+              cols: 2,
               children: [
                 {
                   type: 'tableRow',
@@ -103,6 +151,7 @@ test('gfmTableFromMarkdown()', async function (t) {
             },
             {
               type: 'tableBody',
+              cols: 2,
               children: [
                 {
                   type: 'tableRow',
@@ -163,6 +212,7 @@ test('gfmTableFromMarkdown()', async function (t) {
           children: [
             {
               type: 'tableHead',
+              cols: 4,
               children: [
                 {
                   type: 'tableRow',
@@ -195,6 +245,7 @@ test('gfmTableFromMarkdown()', async function (t) {
             },
             {
               type: 'tableBody',
+              cols: 4,
               children: [
                 {
                   type: 'tableRow',
@@ -279,6 +330,7 @@ test('gfmTableFromMarkdown()', async function (t) {
           children: [
             {
               type: 'tableHead',
+              cols: 2,
               children: [
                 {
                   type: 'tableRow',
@@ -301,6 +353,7 @@ test('gfmTableFromMarkdown()', async function (t) {
             },
             {
               type: 'tableBody',
+              cols: 2,
               children: [
                 {
                   type: 'tableRow',
@@ -343,6 +396,7 @@ test('gfmTableFromMarkdown()', async function (t) {
             children: [
               {
                 type: 'tableHead',
+                cols: 1,
                 children: [
                   {
                     type: 'tableRow',
@@ -410,6 +464,7 @@ test('gfmTableFromMarkdown()', async function (t) {
             children: [
               {
                 type: 'tableHead',
+                cols: 4,
                 children: [
                   {
                     type: 'tableRow',
@@ -535,6 +590,7 @@ test('gfmTableFromMarkdown()', async function (t) {
             children: [
               {
                 type: 'tableHead',
+                cols: 1,
                 children: [
                   {
                     type: 'tableRow',
@@ -583,6 +639,7 @@ test('gfmTableFromMarkdown()', async function (t) {
           children: [
             {
               type: 'tableHead',
+              cols: 3,
               children: [
                 {
                   type: 'tableRow',
@@ -625,6 +682,7 @@ test('gfmTableFromMarkdown()', async function (t) {
             },
             {
               type: 'tableBody',
+              cols: 3,
               children: [
                 {
                   type: 'tableRow',
@@ -730,6 +788,7 @@ test('gfmTableFromMarkdown()', async function (t) {
           children: [
             {
               type: 'tableHead',
+              cols: 2,
               children: [
                 {
                   type: 'tableRow',
@@ -756,6 +815,7 @@ test('gfmTableFromMarkdown()', async function (t) {
             },
             {
               type: 'tableBody',
+              cols: 2,
               children: [
                 {
                   type: 'tableRow',
@@ -871,6 +931,7 @@ test('gfmTableFromMarkdown()', async function (t) {
             children: [
               {
                 type: 'tableHead',
+                cols: 2,
                 children: [
                   {
                     type: 'tableRow',
@@ -915,6 +976,30 @@ test('gfmTableFromMarkdown()', async function (t) {
 })
 
 test('gfmTableToMarkdown', async function (t) {
+  await t.test('table headless', async function () {
+    const mdast = fromMarkdown('| --- |\n| bar |\n', {
+      extensions: [gfmTable()],
+      mdastExtensions: [gfmTableFromMarkdown()]
+    })
+
+    // Const hast = toHast(mdast, {
+    //   allowDangerousHtml: true,
+    //   handlers: gfmTableHastHandlers()
+    // })
+
+    // Const actualHtml = toHtml(hast, {
+    //   allowDangerousHtml: true,
+    //   characterReferences: {useNamedReferences: true},
+    //   closeSelfClosing: true
+    // })
+
+    const actualMarkdown = toMarkdown(mdast, {
+      extensions: [gfmTableToMarkdown()]
+    })
+
+    assert.deepEqual(actualMarkdown, '| --- |\n| bar |\n')
+  })
+
   /** @type {Table} */
   const minitable = {
     type: 'table',
@@ -1308,6 +1393,320 @@ test('gfmTableToMarkdown', async function (t) {
           {extensions: [gfmTableToMarkdown()]}
         ),
         'a\\|\\|b\n'
+      )
+    }
+  )
+})
+
+test('markdownTable', async function (t) {
+  await t.test('should create a table', async function () {
+    assert.equal(
+      markdownTable([
+        ['Branch', 'Commit'],
+        ['main', '0123456789abcdef'],
+        ['staging', 'fedcba9876543210']
+      ]),
+      [
+        '| Branch  | Commit           |',
+        '| ------- | ---------------- |',
+        '| main    | 0123456789abcdef |',
+        '| staging | fedcba9876543210 |'
+      ].join('\n')
+    )
+  })
+
+  await t.test('should serialize values', async function () {
+    assert.equal(
+      markdownTable([
+        ['Type', 'Value'],
+        ['string', 'alpha'],
+        // @ts-expect-error: check handling of primitives.
+        ['number', 1],
+        // @ts-expect-error: check handling of primitives.
+        ['boolean', true],
+        ['undefined', undefined],
+        ['null', null],
+        // @ts-expect-error: check handling of other values.
+        ['Array', [1, 2, 3]]
+      ]),
+      [
+        '| Type      | Value |',
+        '| --------- | ----- |',
+        '| string    | alpha |',
+        '| number    | 1     |',
+        '| boolean   | true  |',
+        '| undefined |       |',
+        '| null      |       |',
+        '| Array     | 1,2,3 |'
+      ].join('\n')
+    )
+  })
+
+  await t.test(
+    'should work correctly when cells are missing',
+    async function () {
+      assert.equal(
+        markdownTable(
+          [
+            ['A', 'B', 'C'],
+            ['a', 'b', 'c'],
+            ['a', 'b'],
+            ['a'],
+            [],
+            ['a', 'b', ''],
+            ['', 'b', 'c'],
+            ['a', '', ''],
+            ['', '', 'c'],
+            ['', '', '']
+          ],
+          {align: 'c'}
+        ),
+        [
+          '|  A  |  B  |  C  |',
+          '| :-: | :-: | :-: |',
+          '|  a  |  b  |  c  |',
+          '|  a  |  b  |     |',
+          '|  a  |     |     |',
+          '|     |     |     |',
+          '|  a  |  b  |     |',
+          '|     |  b  |  c  |',
+          '|  a  |     |     |',
+          '|     |     |  c  |',
+          '|     |     |     |'
+        ].join('\n')
+      )
+    }
+  )
+
+  await t.test('should align left and right', async function () {
+    assert.equal(
+      markdownTable(
+        [
+          ['Beep', 'No.'],
+          ['boop', '33450'],
+          ['foo', '1006'],
+          ['bar', '45']
+        ],
+        {align: ['l', 'r']}
+      ),
+      [
+        '| Beep |   No. |',
+        '| :--- | ----: |',
+        '| boop | 33450 |',
+        '| foo  |  1006 |',
+        '| bar  |    45 |'
+      ].join('\n')
+    )
+  })
+
+  await t.test('should align center', async function () {
+    assert.equal(
+      markdownTable(
+        [
+          ['Beep', 'No.', 'Boop'],
+          ['beep', '1024', 'xyz'],
+          ['boop', '3388450', 'tuv'],
+          ['foo', '10106', 'qrstuv'],
+          ['bar', '45', 'lmno']
+        ],
+        {align: ['l', 'c', 'l']}
+      ),
+      [
+        '| Beep |   No.   | Boop   |',
+        '| :--- | :-----: | :----- |',
+        '| beep |   1024  | xyz    |',
+        '| boop | 3388450 | tuv    |',
+        '| foo  |  10106  | qrstuv |',
+        '| bar  |    45   | lmno   |'
+      ].join('\n')
+    )
+  })
+
+  await t.test('should accept a single value', async function () {
+    assert.equal(
+      markdownTable(
+        [
+          ['Very long', 'Even longer'],
+          ['boop', '33450'],
+          ['foo', '1006'],
+          ['bar', '45']
+        ],
+        {align: 'c'}
+      ),
+      [
+        '| Very long | Even longer |',
+        '| :-------: | :---------: |',
+        '|    boop   |    33450    |',
+        '|    foo    |     1006    |',
+        '|    bar    |      45     |'
+      ].join('\n')
+    )
+  })
+
+  await t.test('should accept multi-character values', async function () {
+    assert.equal(
+      markdownTable(
+        [
+          ['Beep', 'No.', 'Boop'],
+          ['beep', '1024', 'xyz'],
+          ['boop', '3388450', 'tuv'],
+          ['foo', '10106', 'qrstuv'],
+          ['bar', '45', 'lmno']
+        ],
+        {align: ['left', 'center', 'right']}
+      ),
+      [
+        '| Beep |   No.   |   Boop |',
+        '| :--- | :-----: | -----: |',
+        '| beep |   1024  |    xyz |',
+        '| boop | 3388450 |    tuv |',
+        '| foo  |  10106  | qrstuv |',
+        '| bar  |    45   |   lmno |'
+      ].join('\n')
+    )
+  })
+
+  await t.test('should create a table without padding', async function () {
+    assert.equal(
+      markdownTable(
+        [
+          ['Branch', 'Commit'],
+          ['main', '0123456789abcdef'],
+          ['staging', 'fedcba9876543210']
+        ],
+        {padding: false}
+      ),
+      [
+        '|Branch |Commit          |',
+        '|-------|----------------|',
+        '|main   |0123456789abcdef|',
+        '|staging|fedcba9876543210|'
+      ].join('\n')
+    )
+  })
+
+  await t.test(
+    'should create a table without aligned delimiters',
+    async function () {
+      assert.equal(
+        markdownTable(
+          [
+            ['Branch', 'Commit', 'Beep', 'No.', 'Boop'],
+            ['main', '0123456789abcdef', 'beep', '1024', 'xyz'],
+            ['staging', 'fedcba9876543210', 'boop', '3388450', 'tuv']
+          ],
+          {alignDelimiters: false, align: ['', 'l', 'c', 'r']}
+        ),
+        [
+          '| Branch | Commit | Beep | No. | Boop |',
+          '| - | :- | :-: | -: | - |',
+          '| main | 0123456789abcdef | beep | 1024 | xyz |',
+          '| staging | fedcba9876543210 | boop | 3388450 | tuv |'
+        ].join('\n')
+      )
+    }
+  )
+
+  await t.test(
+    'should handle short rules and missing elements for tables w/o aligned delimiters',
+    async function () {
+      assert.equal(
+        markdownTable(
+          [
+            ['A'],
+            ['', '0123456789abcdef'],
+            ['staging', 'fedcba9876543210'],
+            ['develop']
+          ],
+          {alignDelimiters: false}
+        ),
+        [
+          '| A | |',
+          '| - | - |',
+          '| | 0123456789abcdef |',
+          '| staging | fedcba9876543210 |',
+          '| develop | |'
+        ].join('\n')
+      )
+    }
+  )
+
+  await t.test(
+    'should create rows without starting delimiter',
+    async function () {
+      assert.equal(
+        markdownTable(
+          [
+            ['Branch', 'Commit'],
+            ['main', '0123456789abcdef'],
+            ['staging', 'fedcba9876543210'],
+            ['develop']
+          ],
+          {delimiterStart: false}
+        ),
+        [
+          'Branch  | Commit           |',
+          '------- | ---------------- |',
+          'main    | 0123456789abcdef |',
+          'staging | fedcba9876543210 |',
+          'develop |                  |'
+        ].join('\n')
+      )
+    }
+  )
+
+  await t.test(
+    'should create rows without ending delimiter',
+    async function () {
+      assert.equal(
+        markdownTable(
+          [
+            ['Branch', 'Commit'],
+            ['main', '0123456789abcdef'],
+            ['staging', 'fedcba9876543210'],
+            ['develop']
+          ],
+          {delimiterEnd: false}
+        ),
+        [
+          '| Branch  | Commit',
+          '| ------- | ----------------',
+          '| main    | 0123456789abcdef',
+          '| staging | fedcba9876543210',
+          '| develop |'
+        ].join('\n')
+      )
+    }
+  )
+
+  await t.test(
+    'should use `stringLength` to detect cell lengths',
+    async function () {
+      assert.equal(
+        strip(
+          markdownTable(
+            [
+              ['A', 'B', 'C'],
+              [chalk.red('Red'), chalk.green('Green'), chalk.blue('Blue')],
+              [chalk.bold('Bold'), chalk.underline(''), chalk.italic('Italic')],
+              [
+                chalk.inverse('Inverse'),
+                chalk.strikethrough('Strike'),
+                chalk.hidden('Hidden')
+              ],
+              ['bar', '45', 'lmno']
+            ],
+            {align: ['', 'c', 'r'], stringLength}
+          )
+        ),
+        [
+          '| A       |    B   |      C |',
+          '| ------- | :----: | -----: |',
+          '| Red     |  Green |   Blue |',
+          '| Bold    |        | Italic |',
+          '| Inverse | Strike | Hidden |',
+          '| bar     |   45   |   lmno |'
+        ].join('\n')
       )
     }
   )
