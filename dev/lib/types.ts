@@ -1,7 +1,7 @@
 import type {Element, ElementContent, Properties} from 'hast'
-import type {AlignType, Data, PhrasingContent, Parent} from 'mdast'
-import type {Node, Parent as UnistParent} from 'unist'
-import type {Options as MarkdownTableOptions} from 'markdown-table'
+import type {Data, PhrasingContent, Parent} from 'mdast'
+import type {Node} from 'unist'
+import type {Options as MarkdownTableOptions} from './markdown.js'
 
 export type HastElementContent = ElementContent
 export type HastElement = Element
@@ -14,16 +14,16 @@ export interface Options {
   /**
    * Whether to add a space of padding between delimiters and cells (default: `true`).
    */
-  tableCellPadding?: boolean | undefined
+  tableCellPadding?: boolean | null | undefined
   /**
    * Whether to align the delimiters (default: `true`).
    */
-  tablePipeAlign?: boolean | undefined
+  tablePipeAlign?: boolean | null | undefined
   /**
    * Function to detect the length of table cell content, used when aligning
    * the delimiters between cells (optional).
    */
-  stringLength?: MarkdownTableOptions['stringLength'] | undefined
+  stringLength?: MarkdownTableOptions['stringLength'] | null | undefined
 }
 
 /**
@@ -294,6 +294,16 @@ declare module 'mdast-util-to-markdown' {
   }
 }
 
+/**
+ * Trans Data
+ *
+ * @typedef {import('mdast').Data} Data
+ *
+ * @param {Data} v
+ *   Mdast Data.
+ * @returns {Data}
+ *   Mdast Data.
+ */
 export function transData(v: Data): Data {
   return v
 }
