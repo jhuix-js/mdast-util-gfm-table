@@ -1,4 +1,4 @@
-# [**@jhuix/mdast-util-gfm-table**](https://github.com/jhuix/mdast-util-gfm-table)
+# [**@jhuix/mdast-util-gfm-table**](https://github.com/jhuix-js/mdast-util-gfm-table)
 
 [![Downloads][downloads-badge]][downloads]
 [![Size][size-badge]][size]
